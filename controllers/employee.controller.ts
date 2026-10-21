@@ -30,8 +30,14 @@ function validateEmployee(body: unknown) {
   };
 }
 
-function validId(value: string) {
+// Updated: safely accepts unknown values, including string arrays.
+function validId(value: unknown): number | null {
+  if (typeof value !== "string" || !/^\d+$/.test(value)) {
+    return null;
+  }
+
   const id = Number(value);
+
   return Number.isSafeInteger(id) && id > 0 ? id : null;
 }
 
@@ -75,6 +81,7 @@ export const EmployeeController = {
       }
 
       const result = await EmployeeModel.findAll(page, limit, search);
+
       return res.status(200).json(result);
     } catch (error) {
       return handleError(res, error);
@@ -84,7 +91,8 @@ export const EmployeeController = {
   async getById(req: Request, res: Response) {
     try {
       const id = validId(req.params.id);
-      if (!id) {
+
+      if (id === null) {
         return res.status(400).json({ message: "Invalid employee ID" });
       }
 
@@ -111,6 +119,7 @@ export const EmployeeController = {
       }
 
       const employee = await EmployeeModel.create(input);
+
       return res.status(201).json(employee);
     } catch (error) {
       return handleError(res, error);
@@ -120,11 +129,13 @@ export const EmployeeController = {
   async update(req: Request, res: Response) {
     try {
       const id = validId(req.params.id);
-      if (!id) {
+
+      if (id === null) {
         return res.status(400).json({ message: "Invalid employee ID" });
       }
 
       const input = validateEmployee(req.body);
+
       if (!input) {
         return res.status(400).json({
           message: "Valid name, email and role are required",
@@ -146,7 +157,8 @@ export const EmployeeController = {
   async delete(req: Request, res: Response) {
     try {
       const id = validId(req.params.id);
-      if (!id) {
+
+      if (id === null) {
         return res.status(400).json({ message: "Invalid employee ID" });
       }
 
